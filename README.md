@@ -3,49 +3,67 @@
 Implementation of Time Delay Neural Network (TDNN) and Factorized TDNN (TDNN-F)
 in PyTorch, available as layers which can be used directly.
 
-### Installation
+### Setup
 
-Clone the repository and then do:
+For using (no development required)
 
 ```
-pip install .
+pip install pytorch-tdnn
 ```
 
-or `pip install -e .` for development purpose.
+To install for development, clone the repository, and then run the following from
+within the roor directory.
+
+```
+pip install -e .
+``` 
 
 ### Usage
 
-There are 2 available TDNN layers: `TDNN` and `FastTDNN`. 
-
-If the contexts are uniformly distanced (e.g. `[-6,-3,0,3,6]`), use `FastTDNN` 
-which utilizes the dilation options under PyTorch's `Conv1D` for faster computation.
+#### Using the TDNN layer
 
 ```
-from pytorch_tdnn.tdnn import FastTDNN
+from pytorch_tdnn.tdnn import TDNN as TDNNLayer
 
-tdnn = FastTDNN(
+tdnn = TDNNLayer(
   512, # input dim
   512, # output dim
   [-3,0,3], # context
-  full_context=False # if True, use the whole context from -3 to 3
 )
 ```
 
-If the context is non-uniform (e.g. `[-1,0,1,2]` or `[-3,-1,0,1,3]`), use `TDNN`
-which uses convolutional masks (and is therefore slower).
+**Note:** The `context` list should follow these constraints:
+  * The length of the list should be 2 or an odd number.
+  * If the length is 2, it should be of the form `[-1,1]` or `[-3,3]`, but not
+  `[-1,3]`, for example.
+  * If the length is an odd number, they should be evenly spaced with a 0 in the
+  middle. For example, `[-3,0,3]` is allowed, but `[-3,-1,0,1,3]` is not.
+
+#### Using the TDNNF layer
 
 ```
-from pytorch_tdnn.tdnn import TDNN
+from pytorch_tdnn.tdnnf import TDNNF as TDNNFLayer
 
-tdnn = TDNN(
+tdnn = TDNNFLayer(
   512, # input dim
   512, # output dim
-  [-1,0,1,2], # context
+  256, # bottleneck dim
+  1, # time stride
 )
 ```
+
+**Note:** Time stride should be greater than or equal to 0. For example, if
+the time stride is 1, a context of `[-1,1]` is used for each stage of splicing.
 
 ### Credits
 
 * The TDNN implementation is based on: https://github.com/jonasvdd/TDNN.
-* Semi-orthogonal convolutions used in TDNN-F is based on: https://github.com/cvqluu/Factorized-TDNN.
+* Semi-orthogonal convolutions used in TDNN-F are based on: https://github.com/cvqluu/Factorized-TDNN.
 
+This repository aims to wrap up these implementations in easy-installable PyPi
+packages, which can be used directly in PyTorch based neural network training.
+
+### Issues
+
+If you find any bugs in the code, please raise an Issue, or email me at
+`r.desh26@gmail.com`.
