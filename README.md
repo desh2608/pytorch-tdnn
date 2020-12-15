@@ -7,14 +7,14 @@ in PyTorch, available as layers which can be used directly.
 
 For using (no development required)
 
-```
+```bash
 pip install pytorch-tdnn
 ```
 
 To install for development, clone the repository, and then run the following from
 within the roor directory.
 
-```
+```bash
 pip install -e .
 ``` 
 
@@ -22,7 +22,7 @@ pip install -e .
 
 #### Using the TDNN layer
 
-```
+```python
 from pytorch_tdnn.tdnn import TDNN as TDNNLayer
 
 tdnn = TDNNLayer(
@@ -41,7 +41,7 @@ tdnn = TDNNLayer(
 
 #### Using the TDNNF layer
 
-```
+```python
 from pytorch_tdnn.tdnnf import TDNNF as TDNNFLayer
 
 tdnn = TDNNFLayer(
