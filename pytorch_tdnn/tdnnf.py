@@ -162,10 +162,10 @@ class TDNNF(torch.nn.Module):
 
     def forward(self, x, training=True):
         """
-        :param x: is one batch of data, x.size(): [batch_size, sequence_length, input_dim]
+        :param x: is one batch of data, x.size(): [batch_size, input_dim, in_seq_length]
             sequence length is the dimension of the arbitrary length data
         :param training: True if model is in training phase
-        :return: [batch_size, output_dim, len(valid_steps)]
+        :return: [batch_size, output_dim, out_seq_length]
         """
         semi_ortho_step = training and (random.uniform(0,1) < 0.25)
         x = self.factor1(x, semi_ortho_step=semi_ortho_step)

@@ -30,7 +30,11 @@ tdnn = TDNNLayer(
   512, # output dim
   [-3,0,3], # context
 )
+
+y = tdnn(x)
 ```
+
+Here, `x` should have the shape `(batch_size, sequence_length, input_dim)`. 
 
 **Note:** The `context` list should follow these constraints:
   * The length of the list should be 2 or an odd number.
@@ -44,13 +48,19 @@ tdnn = TDNNLayer(
 ```python
 from pytorch_tdnn.tdnnf import TDNNF as TDNNFLayer
 
-tdnn = TDNNFLayer(
+tdnnf = TDNNFLayer(
   512, # input dim
   512, # output dim
   256, # bottleneck dim
   1, # time stride
 )
+
+y = tdnnf(x, training=True)
 ```
+
+The argument `training` is used to perform the semi-orthogonality step only during
+the model training. If this call is made from within a `forward()` function of an
+`nn.Module` class, `training` can be set to `self.training`.
 
 **Note:** Time stride should be greater than or equal to 0. For example, if
 the time stride is 1, a context of `[-1,1]` is used for each stage of splicing.

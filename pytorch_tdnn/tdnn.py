@@ -49,9 +49,9 @@ class TDNN(torch.nn.Module):
 
     def forward(self, x):
         """
-        :param x: is one batch of data, x.size(): [batch_size, input_dim, sequence_length]
+        :param x: is one batch of data, x.size(): [batch_size, input_dim, in_seq_length]
             sequence length is the dimension of the arbitrary length data
-        :return: [batch_size, output_dim, len(valid_steps)]
+        :return: [batch_size, output_dim, out_seq_length ]
         """
         return self.temporal_conv(x)
 
