@@ -1,7 +1,5 @@
 # This implementation is based on: https://github.com/cvqluu/Factorized-TDNN
 
-import random
-
 import torch
 import torch.nn.functional as F
 
@@ -14,7 +12,7 @@ class SemiOrthogonalConv(TDNN):
                 input_dim: int,
                 output_dim: int,
                 context: list,
-                init: str = 'kaldi'):
+                init: str = 'xavier'):
         """
         Semi-orthogonal convolutions. The forward function takes an additional
         parameter that specifies whether to take the semi-orthogonality step.
@@ -23,7 +21,7 @@ class SemiOrthogonalConv(TDNN):
         :param output_dim: The number of channels produced by the temporal convolution
         :param init: Initialization method for weight matrix (default = Kaldi-style)
         """
-        super(SemiOrthogonalConv, self).__init__(input_dim, output_dim, context)
+        super(SemiOrthogonalConv, self).__init__(input_dim, output_dim, context, bias=False)
         self.init_method = init
         self.reset_parameters()
 
@@ -38,7 +36,7 @@ class SemiOrthogonalConv(TDNN):
         elif self.init_method == 'xavier':
             # Use Xavier initialization
             torch.nn.init.xavier_normal_(
-                self.temporal_conv
+                self.temporal_conv.weight
             )
 
     def step_semi_orth(self):
@@ -72,12 +70,11 @@ class SemiOrthogonalConv(TDNN):
             ratio = trace_PP * P.shape[0] / (trace_P * trace_P)
 
             # the following is the tweak to avoid divergence (more info in Kaldi)
-            assert ratio > 0.99, "Ratio of traces is less than 0.99"
+            # assert ratio > 0.9, "Ratio of traces is less than 0.9"
             if ratio > 1.02:
                 update_speed *= 0.5
                 if ratio > 1.1:
                     update_speed *= 0.5
-
             scale2 = trace_PP/trace_P
             update = P - (torch.matrix_power(P, 0) * scale2)
             alpha = update_speed / scale2
@@ -106,12 +103,7 @@ class SemiOrthogonalConv(TDNN):
             if mshape[0] > mshape[1]:    # semi orthogonal constraint for rows > cols
                 M = M.T
             P = torch.mm(M, M.T)
-            PP = torch.mm(P, P.T)
-            trace_P = torch.trace(P)
-            trace_PP = torch.trace(PP)
-            scale2 = torch.sqrt(trace_PP/trace_P) ** 2
-            update = P - (torch.matrix_power(P, 0) * scale2)
-            return torch.norm(update, p='fro')
+            return torch.norm(P, p='fro')
 
     def forward(self, x, semi_ortho_step = False):
         """
@@ -149,8 +141,6 @@ class TDNNF(torch.nn.Module):
         self.bottleneck_dim = bottleneck_dim
         self.output_dim = output_dim
         
-        random.seed(0)
-        
         if time_stride == 0:
             context = [0]
         else:
@@ -160,14 +150,13 @@ class TDNNF(torch.nn.Module):
         self.factor2 = SemiOrthogonalConv(bottleneck_dim, bottleneck_dim, context)
         self.factor3 = TDNN(bottleneck_dim, output_dim, context)
 
-    def forward(self, x, training=True):
+    def forward(self, x, semi_ortho_step=True):
         """
         :param x: is one batch of data, x.size(): [batch_size, input_dim, in_seq_length]
             sequence length is the dimension of the arbitrary length data
-        :param training: True if model is in training phase
+        :param semi_ortho_step: if True, update parameter for semi-orthogonality
         :return: [batch_size, output_dim, out_seq_length]
         """
-        semi_ortho_step = training and (random.uniform(0,1) < 0.25)
         x = self.factor1(x, semi_ortho_step=semi_ortho_step)
         x = self.factor2(x, semi_ortho_step=semi_ortho_step)
         x = self.factor3(x)

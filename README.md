@@ -12,7 +12,7 @@ pip install pytorch-tdnn
 ```
 
 To install for development, clone the repository, and then run the following from
-within the roor directory.
+within the root directory.
 
 ```bash
 pip install -e .
@@ -34,7 +34,7 @@ tdnn = TDNNLayer(
 y = tdnn(x)
 ```
 
-Here, `x` should have the shape `(batch_size, sequence_length, input_dim)`. 
+Here, `x` should have the shape `(batch_size, input_dim, sequence_length)`. 
 
 **Note:** The `context` list should follow these constraints:
   * The length of the list should be 2 or an odd number.
@@ -55,20 +55,29 @@ tdnnf = TDNNFLayer(
   1, # time stride
 )
 
-y = tdnnf(x, training=True)
+y = tdnnf(x, semi_ortho_step=True)
 ```
 
-The argument `training` is used to perform the semi-orthogonality step only during
-the model training. If this call is made from within a `forward()` function of an
-`nn.Module` class, `training` can be set to `self.training`.
+The argument `semi_ortho_step` determines whether to take the step towards semi-
+orthogonality for the constrained convolutional layers in the 3-stage splicing. 
+If this call is made from within a `forward()` function of an
+`nn.Module` class, it can be set as follows to approximate Kaldi-style training
+where the step is taken once every 4 iterations:
+
+```python
+import random
+semi_ortho_step = self.training and (random.uniform(0,1) < 0.25)
+```
 
 **Note:** Time stride should be greater than or equal to 0. For example, if
 the time stride is 1, a context of `[-1,1]` is used for each stage of splicing.
 
 ### Credits
 
-* The TDNN implementation is based on: https://github.com/jonasvdd/TDNN.
+* The TDNN implementation is based on: https://github.com/jonasvdd/TDNN and https://github.com/m-wiesner/nnet_pytorch.
 * Semi-orthogonal convolutions used in TDNN-F are based on: https://github.com/cvqluu/Factorized-TDNN.
+* Thanks to [Matthew Wiesner](https://github.com/m-wiesner) for helpful discussions
+about the implementations.
 
 This repository aims to wrap up these implementations in easy-installable PyPi
 packages, which can be used directly in PyTorch based neural network training.

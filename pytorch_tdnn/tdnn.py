@@ -7,7 +7,8 @@ class TDNN(torch.nn.Module):
     def __init__(self,
                 input_dim: int,
                 output_dim: int,
-                context: list):
+                context: list,
+                bias: bool = True):
         """
         Implementation of TDNN using the dilation argument of the PyTorch Conv1d class
         Due to its fastness the context has gained two constraints:
@@ -44,7 +45,8 @@ class TDNN(torch.nn.Module):
                 output_dim,
                 kernel_size=kernel_size,
                 dilation=dilation,
-                padding=padding
+                padding=padding,
+                bias=bias   # will be set to False for semi-orthogonal TDNNF convolutions
         ))
 
     def forward(self, x):
